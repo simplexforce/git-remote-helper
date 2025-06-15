@@ -25,7 +25,7 @@ pub fn write_line(s: &str) {
 
 pub trait CommandHandler {
     fn name(&self) -> &'static str;
-    fn handle(&self, remote: &impl Remote, args: Vec<&str>);
+    fn handle(&self, remote: &impl Remote, args: Vec<&str>) -> impl Future<Output = ()>;
 }
 
 pub struct Handler<T: Remote> {
@@ -41,7 +41,7 @@ pub struct Handler<T: Remote> {
 }
 
 impl <T : Remote>Handler<T> {
-    pub fn run(&self) {
+    pub async fn run(&self) {
         let mut buf: String = String::new();
 
         loop {
@@ -74,22 +74,22 @@ impl <T : Remote>Handler<T> {
             let cmd = args[0];
             match cmd {
                 "capabilities" => {
-                    self.capabilities_handler.handle(&self.remote, args);
+                    self.capabilities_handler.handle(&self.remote, args).await;
                 }
                 "list" => {
-                    self.list_handler.handle(&self.remote, args);
+                    self.list_handler.handle(&self.remote, args).await;
                 }
                 "fetch" => {
-                    self.fetch_handler.handle(&self.remote, args);
+                    self.fetch_handler.handle(&self.remote, args).await;
                 }
                 "push" => {
-                    self.push_handler.handle(&self.remote, args);
+                    self.push_handler.handle(&self.remote, args).await;
                 }
                 "connect" => {
-                    self.connect_handler.handle(&self.remote, args);
+                    self.connect_handler.handle(&self.remote, args).await;
                 }
                 "stateless-connect" => {
-                    self.stateless_connect_handler.handle(&self.remote, args);
+                    self.stateless_connect_handler.handle(&self.remote, args).await;
                 }
                 _ => {
                     panic!("Unknown command")

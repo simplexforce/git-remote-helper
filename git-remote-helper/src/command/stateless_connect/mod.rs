@@ -17,7 +17,7 @@ impl CommandHandler for StatelessConnectHandler {
         "stateless-connect"
     }
 
-    fn handle(&self, remote: &impl Remote, args: Vec<&str>) {
+    async fn handle(&self, remote: &impl Remote, args: Vec<&str>) {
         if args.len() < 2 {
             panic!("Invalid number of arguments");
         }

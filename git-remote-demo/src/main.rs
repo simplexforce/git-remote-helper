@@ -1,18 +1,19 @@
 
-
 use git_remote_helper::{
-    command::{Handler, 
-        CapabilitiesHandler, 
-        ListHandler, 
-        PushHandler, FetchHandler, 
+    command::{
+        Handler,
+        CapabilitiesHandler,
+        ListHandler,
+        PushHandler, FetchHandler,
         ConnectHandler, StatelessConnectHandler,
-    }, 
+    },
     remote::MemoryRemote,
 };
 
 use log::info;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     env_logger::init();
 
     let args: Vec<String> = std::env::args().collect();
@@ -26,7 +27,7 @@ fn main() {
 
     let commander = Handler {
         remote,
-        capabilities_handler: CapabilitiesHandler { 
+        capabilities_handler: CapabilitiesHandler {
             capabilities: vec![
                 "capabilities",
                 "list",
@@ -43,7 +44,7 @@ fn main() {
         stateless_connect_handler: StatelessConnectHandler {},
     };
 
-    commander.run();
+    commander.run().await;
 
     info!("Communication done.")
 }

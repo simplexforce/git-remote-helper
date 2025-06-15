@@ -12,7 +12,7 @@ impl CommandHandler for ConnectHandler {
         "connect"
     }
 
-    fn handle(&self, remote: &impl Remote, args: Vec<&str>) {
+    async fn handle(&self, remote: &impl Remote, args: Vec<&str>) {
         // Accept this command by a "\n"
         write_line("");
 

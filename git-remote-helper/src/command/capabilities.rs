@@ -21,7 +21,7 @@ impl CommandHandler for CapabilitiesHandler {
         "capabilities"
     }
 
-    fn handle(&self, _: &impl Remote, _: Vec<&str>) {          
+    async fn handle(&self, _: &impl Remote, _: Vec<&str>) {          
         for capability in self.capabilities.iter() {
             write_line(capability);
         }

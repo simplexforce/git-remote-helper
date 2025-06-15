@@ -6,7 +6,6 @@ What is a Git remote helper? See [Git remote helpers documentation](https://git-
 
 ## TODO
  - The in-memory mock Remote implementation isn't very practical as it doesn't persist state between uses. We should implement a solution that uses another local repository as the Remote.
- - Implement async functionality.
  - Implement pktline and pack parsing, or leverage gitoxide.
  - Implement commands like push, fetch, connect, and stateless-connect.
  - More documents.

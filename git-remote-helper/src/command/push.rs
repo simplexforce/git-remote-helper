@@ -14,7 +14,7 @@ impl CommandHandler for PushHandler {
         "push"
     }
 
-    fn handle(&self, remote: &impl Remote, args: Vec<&str>) {
+    async fn handle(&self, remote: &impl Remote, args: Vec<&str>) {
         write_line("");
     }
 }
