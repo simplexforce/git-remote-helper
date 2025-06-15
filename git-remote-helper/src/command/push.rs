@@ -1,6 +1,9 @@
 
 use super::CommandHandler;
-use crate::remote::Remote;
+use crate::{
+    command::write_line, 
+    remote::Remote,
+};
 
 use log::debug;
 
@@ -12,7 +15,6 @@ impl CommandHandler for PushHandler {
     }
 
     fn handle(&self, remote: &impl Remote, args: Vec<&str>) {
-        debug!(r#"Write "\n""#);
-        println!();
+        write_line("");
     }
 }

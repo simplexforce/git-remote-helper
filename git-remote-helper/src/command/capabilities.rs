@@ -1,6 +1,6 @@
 
 use super::CommandHandler;
-use crate::remote::Remote;
+use crate::{command::write_line, remote::Remote};
 
 use log::debug;
 
@@ -23,11 +23,9 @@ impl CommandHandler for CapabilitiesHandler {
 
     fn handle(&self, _: &impl Remote, _: Vec<&str>) {          
         for capability in self.capabilities.iter() {
-            debug!(r#"Write "{}\n""#, capability);
-            println!("{}", capability)
+            write_line(capability);
         }
 
-        debug!(r#"Write "\n""#);
-        println!()
+        write_line("");
     }
 }

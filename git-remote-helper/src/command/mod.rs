@@ -18,6 +18,11 @@ use crate::remote::Remote;
 use log::debug;
 use std::io;
 
+pub fn write_line(s: &str) {
+    debug!(r#"Write "{}\n" "#, s);
+    println!("{}", s);
+}
+
 pub trait CommandHandler {
     fn name(&self) -> &'static str;
     fn handle(&self, remote: &impl Remote, args: Vec<&str>);
@@ -62,8 +67,11 @@ impl <T : Remote>Handler<T> {
                 panic!(r#"Invalid command: {:?}"#, buf);
             }
 
+            // NOTE: Use a map (command name -> command handler) instead of a match statement？
+            // The CommandHandler trait is not dyn compatible. See https://github.com/dtolnay/async-trait
+            // 
+            // Not worth importing async-trait for this case
             let cmd = args[0];
-
             match cmd {
                 "capabilities" => {
                     self.capabilities_handler.handle(&self.remote, args);
@@ -85,23 +93,7 @@ impl <T : Remote>Handler<T> {
                 }
                 _ => {
                     panic!("Unknown command")
-                }      
-
-                // TODO: Use a map (command name -> command handler) instead of a match statement？
-                // The CommandHandler trait is not dyn compatible. See https://github.com/dtolnay/async-trait
-
-                // let cmd = args[0];
-
-                // if let Some(cmd_handler) = commands.get(cmd) {
-                //     cmd_handler.handle(&self.remote, strs);
-                // }   
-
-                // if cmd == "" {
-                //     info!("Input command line is empty. Communication done.");
-                //     return;
-                // }
-
-                // panic!("Unknown command");
+                }
             }
         }
     }

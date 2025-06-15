@@ -1,5 +1,5 @@
 
-use super::CommandHandler;
+use super::{write_line, CommandHandler};
 use crate::remote::Remote;
 
 use log::debug;
@@ -12,7 +12,6 @@ impl CommandHandler for FetchHandler {
     }
 
     fn handle(&self, remote: &impl Remote, args: Vec<&str>) {
-        debug!(r#"Write "\n""#);
-        println!();
+        write_line("");
     }
 }

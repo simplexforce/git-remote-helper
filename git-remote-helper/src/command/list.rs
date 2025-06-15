@@ -1,5 +1,5 @@
 
-use super::CommandHandler;
+use super::{write_line, CommandHandler};
 use crate::remote::Remote;
 
 use log::debug;
@@ -18,11 +18,9 @@ impl CommandHandler for ListHandler {
         let refs = remote.get_refs();
 
         for git_ref in refs.iter() {
-            debug!(r#"Write "{}\n""#, git_ref);
-            println!("{}", git_ref)
+            write_line(git_ref);
         }
 
-        debug!(r#"Write "\n""#);
-        println!()
+        write_line("");
     }
 }

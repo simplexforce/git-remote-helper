@@ -1,7 +1,7 @@
 // See https://git-scm.com/docs/gitprotocol-pack
 
 use super::CommandHandler;
-use crate::remote::Remote;
+use crate::{command::write_line, remote::Remote};
 
 use log::debug;
 
@@ -14,11 +14,9 @@ impl CommandHandler for ConnectHandler {
 
     fn handle(&self, remote: &impl Remote, args: Vec<&str>) {
         // Accept this command by a "\n"
-        debug!(r#"Write "\n""#);
-        println!();
+        write_line("");
 
         // Complete
-        debug!(r#"Write "\n""#);
-        println!();
+        write_line("");
     }
 }

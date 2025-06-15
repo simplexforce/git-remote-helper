@@ -6,7 +6,7 @@
 // ...
 
 use super::CommandHandler;
-use crate::remote::Remote;
+use crate::{command::write_line, remote::Remote};
 
 use log::debug;
 
@@ -23,8 +23,7 @@ impl CommandHandler for StatelessConnectHandler {
         }
 
         // Accept this command by a "\n"
-        debug!(r#"Write "\n""#);
-        println!();
+        write_line("");
 
         let service  = args[1];
         debug!("service: {:?}", service);
