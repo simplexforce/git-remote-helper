@@ -5,7 +5,6 @@ A simple Git remote helper implementation.
 What is a Git remote helper? See [Git remote helpers documentation](https://git-scm.com/docs/gitremote-helpers)
 
 ## TODO
- - Use Rust workspace for better project organization.
  - The in-memory mock Remote implementation isn't very practical as it doesn't persist state between uses. We should implement a solution that uses another local repository as the Remote.
  - Implement async functionality.
  - Implement pktline and pack parsing, or leverage gitoxide.
@@ -46,7 +45,7 @@ RUST_LOG=debug git push origin main
 RUST_LOG=debug git fetch origin main
 ```
 
-Modify the code in [examples/git-remote-demo/main.rs](examples/git-remote-demo/main.rs) and test your changes. For example, you can add or remove refs and capabilities.
+Modify the code in [git-remote-demo/src/main.rs](git-remote-demo/src/main.rs) and test your changes. For example, you can add or remove refs and capabilities.
 
 ### Tips
 

@@ -97,6 +97,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "git-remote-demo"
+version = "0.1.0"
+dependencies = [
+ "env_logger",
+ "git-remote-helper",
+ "log",
+]
+
+[[package]]
 name = "git-remote-helper"
 version = "0.1.0"
 dependencies = [
