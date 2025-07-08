@@ -2,5 +2,6 @@
 resolver = "3"
 members = [ 
     "git-remote-helper",
-    "git-remote-demo",
+    "git-remote-demo", 
+    "git-remote-proxy",
 ]

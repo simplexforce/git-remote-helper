@@ -176,6 +176,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "git-remote-proxy"
+version = "0.1.0"
+dependencies = [
+ "env_logger",
+ "log",
+]
+
+[[package]]
 name = "is_terminal_polyfill"
 version = "1.70.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
