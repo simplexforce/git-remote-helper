@@ -1,11 +1,7 @@
 
 use git_remote_helper::{
     command::{
-        Handler,
-        CapabilitiesHandler,
-        ListHandler,
-        PushHandler, FetchHandler,
-        ConnectHandler, StatelessConnectHandler,
+        CapabilitiesHandler, ConnectHandler, Context, FetchHandler, Handler, HandlerMapBuilder, ListHandler, PushHandler, StatelessConnectHandler
     },
     remote::MemoryRemote,
 };
@@ -25,9 +21,8 @@ async fn main() {
         "8f2cea9673ed3d08ced6aa62281d86e5a6c344b9 refs/heads/main".to_string(),
     ];
 
-    let commander = Handler {
-        remote,
-        capabilities_handler: CapabilitiesHandler {
+    let commands = HandlerMapBuilder::new()
+        .cmd_handler(CapabilitiesHandler {
             capabilities: vec![
                 "capabilities",
                 "list",
@@ -36,15 +31,21 @@ async fn main() {
                 "connect",
                 "*stateless-connect",
             ]
-        },
-        list_handler: ListHandler {},
-        push_handler: PushHandler {},
-        fetch_handler: FetchHandler {},
-        connect_handler: ConnectHandler {},
-        stateless_connect_handler: StatelessConnectHandler {},
+        })
+        .cmd_handler(ListHandler {})
+        .cmd_handler(PushHandler {})
+        .cmd_handler(FetchHandler {})
+        .cmd_handler(ConnectHandler {})
+        .cmd_handler(StatelessConnectHandler {})
+        .build();
+        
+    let context = Context {
+        remote: Box::new(remote),
     };
+    
+    let handler = Handler::new(context, commands);
 
-    commander.run().await;
+    handler.run().await;
 
     info!("Communication done.")
 }

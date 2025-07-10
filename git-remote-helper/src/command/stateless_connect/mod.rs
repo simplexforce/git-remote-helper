@@ -5,19 +5,20 @@
 // fetch
 // ...
 
-use super::CommandHandler;
-use crate::{command::write_line, remote::Remote};
+use super::{CommandHandler, Context, write_line};
 
+use async_trait::async_trait;
 use log::debug;
 
 pub struct StatelessConnectHandler {}
 
+#[async_trait]
 impl CommandHandler for StatelessConnectHandler {
     fn name(&self) -> &'static str {
         "stateless-connect"
     }
 
-    async fn handle(&self, remote: &impl Remote, args: Vec<&str>) {
+    async fn handle(&self, context: &Context, args: Vec<&str>) {
         if args.len() < 2 {
             panic!("Invalid number of arguments");
         }
@@ -25,7 +26,7 @@ impl CommandHandler for StatelessConnectHandler {
         // Accept this command by a "\n"
         write_line("");
 
-        let service  = args[1];
+        let service = args[1];
         debug!("service: {:?}", service);
 
         match service {
@@ -39,6 +40,5 @@ impl CommandHandler for StatelessConnectHandler {
                 panic!("invalid service")
             }
         }
-
     }
 }

@@ -1,5 +1,6 @@
 
 mod capabilities;
+mod option;
 mod list;
 mod push;
 mod fetch;
@@ -7,6 +8,7 @@ mod connect;
 mod stateless_connect;
 
 pub use capabilities::*;
+pub use option::*;
 pub use list::*;
 pub use push::*;
 pub use fetch::*;
@@ -15,32 +17,40 @@ pub use stateless_connect::*;
 
 use crate::remote::Remote;
 
+use async_trait::async_trait;
 use log::debug;
-use std::io;
+use std::{collections::BTreeMap, io};
 
 pub fn write_line(s: &str) {
     debug!(r#"Write "{}\n" "#, s);
     println!("{}", s);
 }
 
+pub struct Context {
+    pub remote: Box<dyn Remote>,
+
+    // pub reader: Box<dyn io::Read>,
+    // pub writer: Box<dyn io::Write>,
+}
+
+unsafe impl Sync for Context {}
+
+#[async_trait]
 pub trait CommandHandler {
     fn name(&self) -> &'static str;
-    fn handle(&self, remote: &impl Remote, args: Vec<&str>) -> impl Future<Output = ()>;
+    async fn handle(&self, remote: &Context, args: Vec<&str>);
 }
 
-pub struct Handler<T: Remote> {
-    pub remote: T,
-
-    // Command handlers
-    pub capabilities_handler: CapabilitiesHandler,
-    pub list_handler: ListHandler,
-    pub push_handler: PushHandler,
-    pub fetch_handler: FetchHandler,
-    pub connect_handler: ConnectHandler,
-    pub stateless_connect_handler: StatelessConnectHandler,
+pub struct Handler{
+    context: Context,
+    handlers: BTreeMap<&'static str, Box<dyn CommandHandler>>,
 }
 
-impl <T : Remote>Handler<T> {
+impl Handler{
+    pub fn new(context: Context, handlers: BTreeMap<&'static str, Box<dyn CommandHandler>>) -> Self {
+        return Self { context, handlers}
+    }
+
     pub async fn run(&self) {
         let mut buf: String = String::new();
 
@@ -69,32 +79,36 @@ impl <T : Remote>Handler<T> {
 
             // NOTE: Use a map (command name -> command handler) instead of a match statement？
             // The CommandHandler trait is not dyn compatible. See https://github.com/dtolnay/async-trait
-            // 
-            // Not worth importing async-trait for this case
             let cmd = args[0];
-            match cmd {
-                "capabilities" => {
-                    self.capabilities_handler.handle(&self.remote, args).await;
-                }
-                "list" => {
-                    self.list_handler.handle(&self.remote, args).await;
-                }
-                "fetch" => {
-                    self.fetch_handler.handle(&self.remote, args).await;
-                }
-                "push" => {
-                    self.push_handler.handle(&self.remote, args).await;
-                }
-                "connect" => {
-                    self.connect_handler.handle(&self.remote, args).await;
-                }
-                "stateless-connect" => {
-                    self.stateless_connect_handler.handle(&self.remote, args).await;
-                }
-                _ => {
-                    panic!("Unknown command")
-                }
+
+
+            if let Some(handler) = self.handlers.get(cmd) {
+                 handler.handle(&self.context, args).await;
             }
+
+            panic!("Unknown command");
         }
+    }
+
+}
+
+pub struct HandlerMapBuilder<'a> {
+    handlers: BTreeMap<&'static str, Box<dyn CommandHandler + 'a>>
+}
+
+impl <'a>HandlerMapBuilder<'a> {
+    pub fn new() -> Self {
+        return Self {
+            handlers: BTreeMap::new()
+        }
+    }
+
+    pub fn cmd_handler(mut self, handler: impl CommandHandler + 'a) -> Self {
+        self.handlers.insert(handler.name(), Box::new(handler));
+        self
+    }
+
+    pub fn build(self) -> BTreeMap<&'static str, Box<dyn CommandHandler + 'a>> {
+        self.handlers
     }
 }

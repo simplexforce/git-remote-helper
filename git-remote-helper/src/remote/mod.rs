@@ -2,8 +2,11 @@ mod memory_remote;
 
 pub use memory_remote::*;
 
+use async_trait::async_trait;
+
+#[async_trait]
 pub trait Remote {
-    fn get_refs(&self) -> impl Future<Output = Vec<String>> + Send;
-    fn get_object(&self, id: String) -> impl Future<Output = Result<String, String>> + Send;
-    fn push_object(&self, id: String, obj: String) -> impl Future<Output = Result<(), String>> + Send;
+    async fn get_refs(&self) -> Vec<String>;
+    async fn get_object(&self, id: String) -> Result<String, String>;
+    async fn push_object(&self, id: String, obj: String) -> Result<(), String>;
 }
