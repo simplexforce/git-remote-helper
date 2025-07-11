@@ -21,12 +21,12 @@ graph LR
 - **Logger**: Records bidirectional communication
 
 ## 3. Configuration
-Use URL format: `proxy://<original-url>`
+Use URL format: `proxy://<remote-url>`
 
 ### Environment Variable
 ```bash
 # Specifies helper name without 'git-remote-' prefix
-export GIT_REMOTE_PROXY_HELPER="real-helper-name"
+export GIT_PROXY_HELPER="real-helper-name"
 ```
 
 ### Examples
@@ -35,7 +35,7 @@ export GIT_REMOTE_PROXY_HELPER="real-helper-name"
 git clone proxy://example.com/hello/test-repo
 
 # Configure environment
-export GIT_REMOTE_PROXY_HELPER="demo"
+export GIT_PROXY_HELPER="demo"
 ```
 
 ## 4. Command Flow
@@ -47,22 +47,45 @@ export GIT_REMOTE_PROXY_HELPER="demo"
    - Proxy ↔ Real Helper (pipes)
 5. Logging occurs for all communications
 
-## 5. Logging
-All communication is logged to stderr using simple format:
+## 5. Advanced Features
 
-```plaintext
-[GIT→PROXY] <content>
-[PROXY→HELPER] <content>
-[HELPER→PROXY] <content>
-[PROXY→GIT] <content>
+### Capabilities Shadowing
+Proxy can override real helper's capabilities using environment variable:
+```bash
+export GIT_PROXY_CAPABILITIES="fetch,option,push"
+```
+- When "capabilities" command is received, proxy outputs configured capabilities instead of forwarding to real helper
+- Allows observing how helper behaves without certain capabilities
+- Default capabilities: "fetch,option,push,connect,stateless-connect"
+
+### Command-Specific Logging
+Proxy provides enhanced logging for different command types:
+- **Standard commands (list, fetch, push):** Logged as plain text lines
+- **Connect/stateless-connect:** Logged in pktline format with hex length prefixes
+  - Example: `000fconnect git://host`
+
+### Log Format
+- Git -> Real Helper: `[GIT -> HELPER] <message>`
+- Real Helper -> Git: `[HELPER -> GIT] <message>`
+
+## 6. Error Handling
+Proxy handles errors by:
+1. Logging detailed error message
+2. Exiting with non-zero status code
+3. Forwarding error to Git when possible
+
+## 7. Example Use Cases
+1. **Observing fetch/push workflows:**
+```bash
+export GIT_PROXY_CAPABILITIES="option,fetch,push"
+git fetch origin
 ```
 
-### V1 Limitations
-- No command-specific handling
-- Pure byte stream forwarding
-- No verbosity controls
+2. **Debugging stateless-connect:**
+```bash
+export GIT_PROXY_CAPABILITIES="option,stateless-connect"
+git fetch origin
+```
 
-## 6. Implementation Notes
-- Uses existing `pktline` module for packet handling
-- Real helper path resolved via `git remote-helper`
-- Exit codes propagate from real helper
+## 8. Implementation Notes
+- Real helper path resolved via `git --exec-path`
