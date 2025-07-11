@@ -63,13 +63,9 @@ impl Handler{
 
             debug!(r#"Read: {:?}"#, buf);
 
-            if buf.as_str() == "" {
-                return
-            }
-
             if buf.as_str() == "\n" {
                 // Do nothing
-                continue;
+                return;
             }
 
             let args: Vec<&str> = buf.trim().split(" ").collect();
