@@ -1,52 +1,55 @@
-use log::{error, info};
+use log::{debug, info};
 use std::{
-    env, io,
+    env,
     path::PathBuf,
     process::{Child, ChildStdin, ChildStdout, Command, Stdio},
 };
-
-pub fn get_git_exec_path() -> anyhow::Result<String> {
-    let git_exec_path = Command::new("git")
-        .arg("--exec-path")
-        .output()?
-        .stdout
-        .into_iter()
-        .take_while(|&c| c != b'\n')
-        .collect::<Vec<_>>();
-    let git_exec_path = String::from_utf8(git_exec_path).map_err(|e| {
-        let err_msg = format!("Failed to parse git exec path: {}", e);
-        error!("{}", err_msg);
-        io::Error::new(io::ErrorKind::Other, err_msg)
-    })?;
-
-    Ok(git_exec_path)
-}
 
 pub fn use_git_exec_path() {
     // Get current PATH
     let old_path = env::var_os("PATH").unwrap_or_default();
 
-    // Get git exec path by running `git --exec-path` command
-    let git_exec_path = get_git_exec_path().expect("Failed to get git exec path");
-    info!("Git exec path: {}", git_exec_path);
-    let new_path_buf = PathBuf::from(git_exec_path);
+    let git_exec_path = get_git_exec_path();
+
+    debug!("Git exec path: {}", git_exec_path);
 
     // Construct new PATH
-    let mut paths = env::split_paths(&old_path).collect::<Vec<_>>();
-    paths.insert(0, new_path_buf.clone());
+    let mut paths = env::split_paths(&old_path)
+        .collect::<Vec<_>>();
+    paths.insert(0, PathBuf::from(git_exec_path));
 
     // Update PATH
-    let new_path_env = env::join_paths(paths).expect("Failed to join paths");
+    let new_path_env = env::join_paths(paths)
+        .expect("Failed to join paths");
     unsafe {
         env::set_var("PATH", new_path_env);
     }
+}
+
+// Get git exec path by running `git --exec-path` command
+pub fn get_git_exec_path() -> String {
+    let git_exec_path = Command::new("git")
+        .arg("--exec-path")
+        .output()
+        .expect("Failed to get output of `Git --exec-path`")
+        .stdout
+        .into_iter()
+        .take_while(|&c| c != b'\n')
+        .collect::<Vec<_>>();
+
+    let git_exec_path = String::from_utf8(git_exec_path)
+        .expect("Failed to get Git exec path");
+
+    git_exec_path
 }
 
 pub fn spawn_real_helper(
     name: &str,
     remote: &str,
     url: &str,
-) -> anyhow::Result<(Child, ChildStdin, ChildStdout)> {
+) -> (Child, ChildStdin, ChildStdout) {
+    info!("Spawned real helper command: {}", name);
+
     // Spawn real helper process
     let mut helper = Command::new(&name)
         .arg(remote)
@@ -54,20 +57,14 @@ pub fn spawn_real_helper(
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::inherit())
-        .spawn()?;
-    info!("Spawned real helper command: {}", name);
+        .spawn()
+        .expect("Failed to spawn real helper");
 
-    let helper_stdin = helper.stdin.take().ok_or_else(|| {
-        let err_msg = "Failed to take helper stdin";
-        error!("{}", err_msg);
-        io::Error::new(io::ErrorKind::Other, err_msg)
-    })?;
+    let helper_stdin = helper.stdin.take()
+        .expect("Failed to take helper stdin");
 
-    let helper_stdout = helper.stdout.take().ok_or_else(|| {
-        let err_msg = "Failed to take helper stdout";
-        error!("{}", err_msg);
-        io::Error::new(io::ErrorKind::Other, err_msg)
-    })?;
+    let helper_stdout = helper.stdout.take()
+        .expect("Failed to take helper stdout");
 
-    Ok((helper, helper_stdin, helper_stdout))
+    (helper, helper_stdin, helper_stdout)
 }

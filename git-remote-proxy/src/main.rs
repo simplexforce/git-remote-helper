@@ -10,7 +10,6 @@ use handlers::*;
 use utils::*;
 
 fn main() -> anyhow::Result<()> {
-    // Initialize logger
     env_logger::init();
 
     // Parse command-line arguments
@@ -25,11 +24,8 @@ fn main() -> anyhow::Result<()> {
     info!("Starting git-remote-proxy for {}: {}", remote_name, url);
 
     // Get real helper name from environment variable
-    let helper_name = env::var("GIT_PROXY_HELPER").map_err(|_| {
-        let err_msg = "GIT_PROXY_HELPER environment variable not set";
-        error!("{}", err_msg);
-        io::Error::new(io::ErrorKind::Other, err_msg)
-    })?;
+    let helper_name = env::var("GIT_PROXY_HELPER")
+        .expect("GIT_PROXY_HELPER environment variable not set");
     info!("Using helper name: {}", helper_name);
 
     // Transform URL by replacing proxy scheme with helper name
@@ -42,8 +38,11 @@ fn main() -> anyhow::Result<()> {
     let real_helper = format!("git-remote-{}", helper_name);
     debug!("Real helper: {}", real_helper);
 
-    let (mut helper, helper_stdin, helper_stdout) =
-        spawn_real_helper(&real_helper, &remote_name, &transformed_url)?;
+    let (
+        mut helper, 
+        helper_stdin, 
+        helper_stdout,
+    ) = spawn_real_helper(&real_helper, &remote_name, &transformed_url);
 
     let proxy_stdin = io::stdin();
     let proxy_stdout = io::stdout();
