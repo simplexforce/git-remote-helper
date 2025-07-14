@@ -1,4 +1,6 @@
 
+use std::sync::{Arc, RwLock};
+
 use git_remote_helper::{
     command::{
         CapabilitiesHandler, ConnectHandler, Context, FetchHandler, Handler, HandlerMapBuilder, ListHandler, PushHandler, StatelessConnectHandler
@@ -17,19 +19,18 @@ async fn main() {
 
     let mut remote = MemoryRemote::new();
     remote.head = "@refs/heads/main HEAD".to_string();
-    remote.refs = vec![
+    remote.refs = Arc::new(RwLock::new(vec![
         "8f2cea9673ed3d08ced6aa62281d86e5a6c344b9 refs/heads/main".to_string(),
-    ];
+    ]));
 
     let commands = HandlerMapBuilder::new()
         .cmd_handler(CapabilitiesHandler {
             capabilities: vec![
-                "capabilities",
                 "list",
                 "fetch",
                 "push",
-                "connect",
-                "*stateless-connect",
+                // "connect",
+                "stateless-connect",
             ]
         })
         .cmd_handler(ListHandler {})

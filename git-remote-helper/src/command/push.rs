@@ -12,6 +12,11 @@ impl CommandHandler for PushHandler {
     }
 
     async fn handle(&self, context: &Context, args: Vec<&str>) {
+        // Push implementation would use:
+        // - remote.list_push_refs() to get pushable references
+        // - remote.push_object() for each object to push
+        // - remote.update_refs() to update references after push
+        // For now, just output empty line as placeholder
         write_line("");
     }
 }

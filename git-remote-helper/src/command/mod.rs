@@ -18,11 +18,16 @@ use crate::remote::Remote;
 
 use async_trait::async_trait;
 use log::debug;
-use std::{collections::BTreeMap, io};
+use std::{collections::BTreeMap, io::{self, stdout, Write}};
 
 pub fn write_line(s: &str) {
-    debug!(r#"Write "{}\n" "#, s);
+    debug!("Write \"{}\\n\"", s);
     println!("{}", s);
+}
+
+pub fn write(data: &[u8]) {
+    debug!("Write {:?} ", String::from_utf8_lossy(data));
+    stdout().write_all(data).expect("Failed to write data to stdout");
 }
 
 pub struct Context {
@@ -80,6 +85,7 @@ impl Handler {
 
             if let Some(handler) = self.handlers.get(cmd) {
                 handler.handle(&self.context, args).await;
+                continue
             }
 
             panic!("Unknown command");
