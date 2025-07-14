@@ -76,7 +76,7 @@ impl GitHandler {
                 return self.handle_capabilities();
             }
             _ => {
-                info!("[GIT -> HELPER] {}\\n", line.trim_end());
+                info!("[GIT -> HELPER] \"{}\\n\"", line.trim_end());
             }
         }
 
@@ -98,7 +98,7 @@ impl GitHandler {
             // Write capabilities to git stdout
             for cap in capabilities {
                 writeln!(self.context.lock().unwrap().proxy_stdout, "{}", cap)?;
-                info!("[PROXY -> GIT] {}\\n", cap)
+                info!("[PROXY -> GIT] \"{}\\n\"", cap)
             }
 
             // Write empty line to terminate
@@ -150,16 +150,19 @@ impl HelperHandler {
 
             // Log and forward
             if is_connect_cmd {
-                // For connect commands, log in pktline format
-                info!("[HELPER -> GIT] {}\\n", str.trim_end());
-
                 // Check for termination packet
                 if str.ends_with("0000") {
-                    info!("Termination packet received, ending connect state");
-                    // context.current_command = "".to_string();
+                    info!("Termination packet received, ending {} state", context.current_command);
+                    context.current_command = "".to_string();
+
+                    // For connect commands, log in pktline format
+                    info!("[HELPER -> GIT] \"{}\"", str.trim_end());
+                } else {
+                    // For connect commands, log in pktline format
+                    info!("[HELPER -> GIT] \"{}\\n\"", str.trim_end());
                 }
             } else {
-                info!("[HELPER -> GIT] {}\\n", str.trim_end());
+                info!("[HELPER -> GIT] \"{}\\n\"", str.trim_end());
             }
 
             context.proxy_stdout.write_all(&buf[..n])?;

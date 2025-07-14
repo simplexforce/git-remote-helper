@@ -1,48 +1,40 @@
 mod handlers;
 mod utils;
+mod config;
 
 use std::sync::{Arc, Mutex};
-use std::{env, io, thread};
+use std::{io, thread};
 
-use log::{debug, error, info};
+use log::{debug, info};
 
 use handlers::*;
 use utils::*;
+use config::*;
 
 fn main() -> anyhow::Result<()> {
     env_logger::init();
 
-    // Parse command-line arguments
-    let args: Vec<String> = env::args().collect();
-    if args.len() < 3 {
-        error!("Usage: git-remote-proxy <remote-name> <url>");
-        std::process::exit(1);
-    }
-    let remote_name = &args[1];
-    let url = &args[2];
+    let (remote, url) = load_args();
 
-    info!("Starting git-remote-proxy for {}: {}", remote_name, url);
+    let config = load_env();
 
-    // Get real helper name from environment variable
-    let helper_name = env::var("GIT_PROXY_HELPER")
-        .expect("GIT_PROXY_HELPER environment variable not set");
-    info!("Using helper name: {}", helper_name);
+    update_git_config_file(&format!("{}/config", config.git_dir), &config.git_proxy_helper);
 
     // Transform URL by replacing proxy scheme with helper name
-    let transformed_url = url.replace("proxy://", &format!("{}://", helper_name));
-    info!("Transformed URL: {}", transformed_url);
+    let transformed_url = url.replace("proxy://", &format!("{}://", &config.git_proxy_helper));
+    debug!("Transformed URL: {}", transformed_url);
 
     use_git_exec_path();
 
     // Create real helper command by prepending "git-remote-"
-    let real_helper = format!("git-remote-{}", helper_name);
+    let real_helper = format!("git-remote-{}", &config.git_proxy_helper);
     debug!("Real helper: {}", real_helper);
 
     let (
         mut helper, 
         helper_stdin, 
         helper_stdout,
-    ) = spawn_real_helper(&real_helper, &remote_name, &transformed_url);
+    ) = spawn_real_helper(&real_helper, &remote, &transformed_url);
 
     let proxy_stdin = io::stdin();
     let proxy_stdout = io::stdout();

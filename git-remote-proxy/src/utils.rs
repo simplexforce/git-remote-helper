@@ -1,6 +1,6 @@
 use log::{debug, info};
 use std::{
-    env,
+    env, fs,
     path::PathBuf,
     process::{Child, ChildStdin, ChildStdout, Command, Stdio},
 };
@@ -67,4 +67,14 @@ pub fn spawn_real_helper(
         .expect("Failed to take helper stdout");
 
     (helper, helper_stdin, helper_stdout)
+}
+
+pub fn update_git_config_file(file_path: &str, helper: &str) {
+    let content = fs::read_to_string(file_path)
+        .expect("Failed to read config file");
+    
+    let new_content = content.replace("proxy://", &format!("{}://", helper));
+    
+    fs::write(file_path, new_content)
+        .expect("Failed to write config file");
 }
