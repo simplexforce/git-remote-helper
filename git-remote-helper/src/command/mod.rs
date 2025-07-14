@@ -1,18 +1,17 @@
-
 mod capabilities;
-mod option;
-mod list;
-mod push;
-mod fetch;
 mod connect;
+mod fetch;
+mod list;
+mod option;
+mod push;
 mod stateless_connect;
 
 pub use capabilities::*;
-pub use option::*;
-pub use list::*;
-pub use push::*;
-pub use fetch::*;
 pub use connect::*;
+pub use fetch::*;
+pub use list::*;
+pub use option::*;
+pub use push::*;
 pub use stateless_connect::*;
 
 use crate::remote::Remote;
@@ -28,7 +27,6 @@ pub fn write_line(s: &str) {
 
 pub struct Context {
     pub remote: Box<dyn Remote>,
-
     // pub reader: Box<dyn io::Read>,
     // pub writer: Box<dyn io::Write>,
 }
@@ -41,14 +39,17 @@ pub trait CommandHandler {
     async fn handle(&self, remote: &Context, args: Vec<&str>);
 }
 
-pub struct Handler{
+pub struct Handler {
     context: Context,
     handlers: BTreeMap<&'static str, Box<dyn CommandHandler>>,
 }
 
-impl Handler{
-    pub fn new(context: Context, handlers: BTreeMap<&'static str, Box<dyn CommandHandler>>) -> Self {
-        return Self { context, handlers}
+impl Handler {
+    pub fn new(
+        context: Context,
+        handlers: BTreeMap<&'static str, Box<dyn CommandHandler>>,
+    ) -> Self {
+        return Self { context, handlers };
     }
 
     pub async fn run(&self) {
@@ -77,25 +78,23 @@ impl Handler{
             // The CommandHandler trait is not dyn compatible. See https://github.com/dtolnay/async-trait
             let cmd = args[0];
 
-
             if let Some(handler) = self.handlers.get(cmd) {
-                 handler.handle(&self.context, args).await;
+                handler.handle(&self.context, args).await;
             }
 
             panic!("Unknown command");
         }
     }
-
 }
 
 pub struct HandlerMapBuilder<'a> {
-    handlers: BTreeMap<&'static str, Box<dyn CommandHandler + 'a>>
+    handlers: BTreeMap<&'static str, Box<dyn CommandHandler + 'a>>,
 }
 
-impl <'a>HandlerMapBuilder<'a> {
+impl<'a> HandlerMapBuilder<'a> {
     pub fn new() -> Self {
-        return Self {
-            handlers: BTreeMap::new()
+        Self {
+            handlers: BTreeMap::new(),
         }
     }
 
