@@ -47,8 +47,10 @@ impl GitHandler {
             debug!(r#"Read from git: {:?}"#, str);
 
             if str == "\n" {
+                let mut context = self.context.lock().unwrap();
                 // Forward blank line to helper
-                self.context.lock().unwrap().helper_stdin.write_all(b"\n")?;
+                context.helper_stdin.write_all(b"\n")?;
+                context.helper_stdin.flush()?;
                 break;
             }
 
@@ -81,15 +83,15 @@ impl GitHandler {
         }
 
         // Forward to real helper (line already includes newline)
-        self.context
-            .lock()
-            .unwrap()
-            .helper_stdin
-            .write_all(line.as_bytes())?;
+        let mut context = self.context.lock().unwrap();
+        context.helper_stdin.write_all(line.as_bytes())?;
+        context.helper_stdin.flush()?;
         Ok(())
     }
 
     fn handle_capabilities(&mut self) -> io::Result<()> {
+        let mut context =  self.context.lock().unwrap();
+
         // Check if shadow capabilities are configured
         if let Ok(shadow_caps) = env::var("GIT_PROXY_CAPABILITIES") {
             // Use configured shadow capabilities
@@ -97,23 +99,20 @@ impl GitHandler {
 
             // Write capabilities to git stdout
             for cap in capabilities {
-                writeln!(self.context.lock().unwrap().proxy_stdout, "{}", cap)?;
+                writeln!(context.proxy_stdout, "{}", cap)?;
                 info!("[PROXY -> GIT] \"{}\\n\"", cap)
             }
 
             // Write empty line to terminate
-            writeln!(self.context.lock().unwrap().proxy_stdout)?;
+            writeln!(context.proxy_stdout)?;
             info!("Shadowed capabilities: {}", shadow_caps);
             return Ok(());
         }
 
         // Forward to real helper when no shadowing
         info!("Forwarding capabilities command to real helper");
-        self.context
-            .lock()
-            .unwrap()
-            .helper_stdin
-            .write_all(b"capabilities\n")?;
+        context.helper_stdin.write_all(b"capabilities\n")?;
+        context.helper_stdin.flush()?;
         Ok(())
     }
 }
@@ -166,6 +165,7 @@ impl HelperHandler {
             }
 
             context.proxy_stdout.write_all(&buf[..n])?;
+            context.proxy_stdout.flush()?;
         }
         Ok(())
     }

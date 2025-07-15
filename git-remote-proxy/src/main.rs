@@ -2,6 +2,7 @@ mod handlers;
 mod utils;
 mod config;
 
+use std::process::exit;
 use std::sync::{Arc, Mutex};
 use std::{io, thread};
 
@@ -67,19 +68,21 @@ fn main() -> anyhow::Result<()> {
     });
 
     // Thread to forward Helper -> Proxy -> Git
-    let t2 = thread::spawn(move || -> io::Result<()> {
+    let _ = thread::spawn(move || -> io::Result<()> {
         helper_handler.read_from_helper()
     });
 
     // Wait for threads to finish
     t1.join().unwrap()?;
-    t2.join().unwrap()?;
+    helper.kill()?;
+    exit(0);
+    // t2.join().unwrap()?;
 
-    info!("Forwarding threads completed");
+    // info!("Forwarding threads completed");
 
-    // Wait for helper process to exit
-    let status = helper.wait()?;
-    let exit_code = status.code().unwrap_or(0);
-    info!("Helper process exited with code: {}", exit_code);
-    std::process::exit(exit_code);
+    // // Wait for helper process to exit
+    // let status = helper.wait()?;
+    // let exit_code = status.code().unwrap_or(0);
+    // info!("Helper process exited with code: {}", exit_code);
+    // std::process::exit(exit_code);
 }
